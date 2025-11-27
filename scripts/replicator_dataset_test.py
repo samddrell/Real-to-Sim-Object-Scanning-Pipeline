@@ -1,4 +1,4 @@
-from omni.isaac.kit import SimulationApp
+from isaacsim import SimulationApp
 simulation_app = SimulationApp({"headless": True})
 
 import omni.replicator.core as rep
