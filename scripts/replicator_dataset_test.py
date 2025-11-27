@@ -7,7 +7,7 @@ import os
 
 # Resolve paths relative to this script's location
 ROOT = Path(__file__).resolve().parents[1]   # go up from scripts/ to project root
-PHOTO_DIR = ROOT / "data" / "photos_raw"
+PHOTO_DIR = ROOT / "data" / "test_photos"
 OUTPUT_DIR = ROOT / "data" / "datasets" / "photo_test"
 
 IMAGE_PATHS = [
