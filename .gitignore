@@ -1,0 +1,12 @@
+# VSCode stuff (optional: you can keep .vscode if you want to share)
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated datasets
+data/datasets/
+
+# If you want photos to stay local/private:
+# data/photos_raw/
