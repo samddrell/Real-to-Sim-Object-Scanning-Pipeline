@@ -31,7 +31,7 @@ with rep.new_layer():
             position=(0, 0, 0),
             scale=1.0,
         )
-        mat = rep.create.material_omniPBR()
+        mat = rep.create.material_omnipbr()
         mat.set_texture("diffuse_texture", img)
         card.set_material(mat)
         cards.append(card)
