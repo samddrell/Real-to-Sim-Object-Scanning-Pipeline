@@ -24,7 +24,7 @@ INSTANT_NGP_ROOT = Path(r"C:\Apps\Instant-NGP-for-RTX-2000").resolve()
 ISAAC_PYTHON = Path(r"C:\isaac-sim\python.bat").resolve()
 
 # Where to store per-object workspaces
-DEFAULT_WORKSPACE_ROOT = Path(r"C:\nerf_workspaces").resolve()
+DEFAULT_WORKSPACE_ROOT = Path(__file__).resolve().parent / "data"
 
 # NeRF training settings
 N_STEPS = 30000  # tune based on quality/time tradeoff
@@ -46,3 +46,30 @@ def ensure_empty_dir(path: Path):
         # be careful here: this deletes previous results
         shutil.rmtree(path)
     path.mkdir(parents=True, exist_ok=True)
+
+# ====== STEP 1: Prepare workspace & images ======
+
+def prepare_workspace(images_dir: Path, workspace_root: Path, scene_name: str) -> Path:
+    """
+    Create a workspace for this object and copy/symlink images into scene_dir/images.
+    Returns the path to scene_dir.
+    """
+    scene_dir = workspace_root / scene_name
+    images_out = scene_dir / "images"
+    colmap_dir = scene_dir / "colmap"
+
+    scene_dir.mkdir(parents=True, exist_ok=True)
+    images_out.mkdir(parents=True, exist_ok=True)
+    colmap_dir.mkdir(parents=True, exist_ok=True)
+
+    # Simple implementation: copy images.
+    # You could instead symlink to save space.
+    for img in sorted(images_dir.glob("*")):
+        if img.suffix.lower() in {".jpg", ".jpeg", ".png"}:
+            dst = images_out / img.name
+            if not dst.exists():
+                shutil.copy2(img, dst)
+
+    print(f"Prepared workspace at: {scene_dir}")
+    print(f"Copied images to:      {images_out}")
+    return scene_dir
