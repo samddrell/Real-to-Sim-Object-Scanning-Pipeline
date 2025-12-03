@@ -7,6 +7,7 @@ End-to-end pipeline:
 3) mesh.obj -> mesh.usd (via headless Blender)
 
 """
+import omni.kit.asset_converter   
 
 import argparse
 import os
@@ -140,7 +141,29 @@ def train_nerf_and_export_mesh(scene_dir: Path, mesh_out: Path, snapshot_out: Pa
     print(f"Exported mesh to:       {mesh_out}")
 
 
-# OBJ -> USD must be accomplished via headless isaac script
+# ====== STEP 4: ISAAC headless OBJ -> USD ======
+
+def convert_mesh_to_usd_with_isaac(mesh_obj: Path, usd_out: Path):
+    mgr = omni.kit.asset_converter.get_instance()
+
+    def progress(step, total):
+        print(f"[Convert] {step}/{total}")
+
+    task = mgr.create_converter_task(
+        str(mesh_obj),
+        str(usd_out),
+        progress,
+    )
+
+    import asyncio
+    loop = asyncio.get_event_loop()
+    success = loop.run_until_complete(task.wait_until_finished())
+
+    if not success:
+        print("Conversion failed:", task.get_error_message())
+        raise RuntimeError("Asset conversion failed")
+
+    print(f"[OK] Converted {mesh_obj} → {usd_out}")
 
 # ====== MAIN PIPELINE ======
 
@@ -192,12 +215,11 @@ def main():
 
     train_nerf_and_export_mesh(scene_dir, mesh_out, snapshot_out)
 
-    # Step 4: OBJ -> USD via Blender
+    # Step 4: OBJ -> USD via Isaac headless
     usd_out = output_dir / f"{scene_name}.usd"
     temp_script = output_dir / "convert_obj_to_usd_tmp.py"
 
-    # TODO: Change this to use the new Isaac Sim Blender headless conversion script
-    convert_mesh_to_usd_with_blender(mesh_out, usd_out, temp_script)
+    convert_mesh_to_usd_with_isaac(mesh_out, usd_out, temp_script)
 
     print("\n=== PIPELINE COMPLETE ===")
     print(f"Scene dir : {scene_dir}")
