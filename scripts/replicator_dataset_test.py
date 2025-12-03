@@ -56,8 +56,15 @@ with rep.new_layer():
     render_product = rep.create.render_product(camera, (640, 480))
     print(f"Render product: {render_product}")
 
-    print("Creating dome light...")
-    rep.create.light(light_type="Dome", intensity=8000)
+    # ---------- Strong key light ----------
+    print("Creating strong key light...")
+    key_light = rep.create.light(
+        light_type="Sphere",
+        position=(0, 3.0, -2.0),   # above the cube
+        intensity=500_000,         # MUCH brighter than before
+        temperature=6500,          # daylight
+        visible=False,             # don't render the light source itself
+    )
 
     # ---------- Randomization loop ----------
     print("Setting up on_frame trigger (max_execs=5)...")
