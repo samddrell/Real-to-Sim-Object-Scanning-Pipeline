@@ -9,14 +9,6 @@ ROOT = Path(__file__).resolve().parents[1]   # project root (up from scripts/)
 OUTPUT_DIR = ROOT / "data" / "datasets" / "cube_test"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-IMAGE_PATHS = [
-    str(p) for p in PHOTO_DIR.iterdir()
-    if p.suffix.lower() in (".jpg", ".jpeg", ".png")
-]
-
-if not IMAGE_PATHS:
-    raise RuntimeError(f"No images found in {PHOTO_DIR}")
-
 # ---------- Build scene ----------
 with rep.new_layer():
 
