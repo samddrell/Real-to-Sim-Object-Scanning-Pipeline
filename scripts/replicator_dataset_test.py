@@ -3,45 +3,46 @@ simulation_app = SimulationApp({"headless": True})
 
 import omni.replicator.core as rep
 from pathlib import Path
+import os
 
 # ---------- Paths / setup ----------
 ROOT = Path(__file__).resolve().parents[1]   # project root (up from scripts/)
 OUTPUT_DIR = ROOT / "data" / "datasets" / "cube_test"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-print("Replicator cube test starting.")
-print(f"OUTPUT_DIR = {OUTPUT_DIR}")
+print("\n=== Replicator cube test starting (instrumented) ===")
+print(f"cwd             = {os.getcwd()}")
+print(f"OUTPUT_DIR      = {OUTPUT_DIR}")
+print(f"OUTPUT_DIR abs? = {OUTPUT_DIR.is_absolute()}")
+print(f"OUTPUT_DIR exists? {OUTPUT_DIR.exists()}")
+
+# For sanity, show all registered writers
+print("Available writers in WriterRegistry:", rep.WriterRegistry.get_writers())
 
 # ---------- Build scene ----------
 with rep.new_layer():
 
-    # Ground plane
+    print("Creating ground plane...")
     rep.create.plane(scale=50, semantics=[("class", "ground")])
 
-    # Simple cube object
+    print("Creating cube...")
     cube = rep.create.cube(
         semantics=[("class", "cube")],
         position=(0, 0.5, -2.0),
         scale=0.5,
     )
 
-    # Camera looking at the cube
+    print("Creating camera + render product...")
     camera = rep.create.camera(position=(0, 1, 1), look_at=(0, 0.5, -2.0))
     render_product = rep.create.render_product(camera, (640, 480))
+    print(f"Render product: {render_product}")
 
-    # Light
+    print("Creating dome light...")
     rep.create.light(light_type="Dome", intensity=8000)
 
-    # Single card that we’ll keep re-texturing
-    card = rep.create.plane(
-        semantics=[("class", "photo")],
-        position=(0, 0, -1.5),
-        scale=1.0,
-    )
-
     # ---------- Randomization loop ----------
-    # For 30 frames, randomize the cube pose a bit
-    with rep.trigger.on_frame(max_execs=30):  # <-- use max_execs instead of num_frames
+    print("Setting up on_frame trigger (max_execs=5)...")
+    with rep.trigger.on_frame(max_execs=5):
         with cube:
             rep.modify.pose(
                 position=rep.distribution.uniform(
@@ -56,14 +57,37 @@ with rep.new_layer():
             )
 
     # ---------- Writer ----------
+    print("Getting BasicWriter from WriterRegistry...")
     writer = rep.WriterRegistry.get("BasicWriter")
-    writer.initialize(
-        output_dir=str(OUTPUT_DIR),
-        rgb=True,
-        bounding_box_2d_tight=True,
-    )
+    print(f"Writer object: {writer}")
+
+    cfg = {
+        "output_dir": str(OUTPUT_DIR),
+        "rgb": True,
+        "bounding_box_2d_tight": True,
+    }
+    print("Initializing writer with config:", cfg)
+    writer.initialize(**cfg)
+
+    print("Attaching writer to render_product...")
     writer.attach([render_product])
 
-# Run until our on_frame trigger is done
-rep.orchestrator.run()
+print("Triggers configured. Running orchestrator with run_until_complete()...")
+rep.orchestrator.run_until_complete()
+print("Orchestrator run complete.")
+
+# ---------- Inspect OUTPUT_DIR from inside the app ----------
+print("\nContents of OUTPUT_DIR after run:")
+if OUTPUT_DIR.exists():
+    any_files = False
+    for p in OUTPUT_DIR.rglob("*"):
+        print(" -", p, "(dir)" if p.is_dir() else "(file)")
+        any_files = True
+    if not any_files:
+        print(" (no files or subdirectories found)")
+else:
+    print("OUTPUT_DIR does not exist (this would be weird).")
+
+print("\nClosing SimulationApp...")
 simulation_app.close()
+print("SimulationApp closed.")
