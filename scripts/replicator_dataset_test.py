@@ -40,25 +40,19 @@ with rep.new_layer():
     )
 
     # ---------- Randomization loop ----------
-    # For 30 frames, randomize the card’s texture and pose
-    with rep.trigger.on_frame(num_frames=30):
-        with card:
-            # Random texture from your PHOTO_DIR images
-            rep.randomizer.texture(
-                textures=IMAGE_PATHS,
-                project_uvw=True,
-            )
-            # Random pose
+    # For 30 frames, randomize the cube pose a bit
+    with rep.trigger.on_frame(max_execs=30):  # <-- use max_execs instead of num_frames
+        with cube:
             rep.modify.pose(
                 position=rep.distribution.uniform(
-                    (-0.5, 0.3, -2.0),   # z = -2.0 (lower)
-                    (0.5, 0.8, -1.0),   # z = -1.0 (upper)
+                    (-0.5, 0.3, -3.0),
+                    (0.5, 0.8, -1.5),
                 ),
                 rotation=rep.distribution.uniform(
                     (0, -45, 0),
                     (0, 45, 0),
                 ),
-                scale=rep.distribution.uniform(0.5, 1.2),
+                scale=rep.distribution.uniform(0.4, 0.8),
             )
 
     # ---------- Writer ----------
