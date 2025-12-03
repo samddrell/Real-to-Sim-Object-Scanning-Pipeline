@@ -138,3 +138,73 @@ def train_nerf_and_export_mesh(scene_dir: Path, mesh_out: Path, snapshot_out: Pa
 
     print(f"Saved NeRF snapshot to: {snapshot_out}")
     print(f"Exported mesh to:       {mesh_out}")
+
+
+# OBJ -> USD must be accomplished via headless isaac script
+
+# ====== MAIN PIPELINE ======
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Images -> NeRF (instant-ngp) -> Mesh (OBJ) -> USD (Blender headless)"
+    )
+    parser.add_argument(
+        "--images",
+        type=str,
+        required=True,
+        help="Directory of input images for this object",
+    )
+    parser.add_argument(
+        "--scene_name",
+        type=str,
+        required=True,
+        help="Short name for this object (e.g. 'mug01')",
+    )
+    parser.add_argument(
+        "--workspace_root",
+        type=str,
+        default=str(DEFAULT_WORKSPACE_ROOT),
+        help=f"Root folder for per-object workspaces (default: {DEFAULT_WORKSPACE_ROOT})",
+    )
+    args = parser.parse_args()
+
+    images_dir = Path(args.images).resolve()
+    workspace_root = Path(args.workspace_root).resolve()
+    scene_name = args.scene_name
+
+    if not images_dir.exists():
+        raise FileNotFoundError(f"Images dir not found: {images_dir}")
+
+    workspace_root.mkdir(parents=True, exist_ok=True)
+
+    # Step 1: prepare scene workspace
+    scene_dir = prepare_workspace(images_dir, workspace_root, scene_name)
+
+    # Step 2: COLMAP + transforms.json
+    run_colmap2nerf(scene_dir)
+
+    # Step 3: train NeRF + export mesh
+    output_dir = scene_dir / "output"
+    output_dir.mkdir(exist_ok=True)
+
+    mesh_out = output_dir / f"{scene_name}_mesh.obj"
+    snapshot_out = output_dir / f"{scene_name}_nerf.msgpack"
+
+    train_nerf_and_export_mesh(scene_dir, mesh_out, snapshot_out)
+
+    # Step 4: OBJ -> USD via Blender
+    usd_out = output_dir / f"{scene_name}.usd"
+    temp_script = output_dir / "convert_obj_to_usd_tmp.py"
+
+    # TODO: Change this to use the new Isaac Sim Blender headless conversion script
+    convert_mesh_to_usd_with_blender(mesh_out, usd_out, temp_script)
+
+    print("\n=== PIPELINE COMPLETE ===")
+    print(f"Scene dir : {scene_dir}")
+    print(f"Mesh OBJ  : {mesh_out}")
+    print(f"USD asset : {usd_out}")
+    print("You can now bring this USD into Isaac Sim / Omniverse Replicator.")
+
+
+if __name__ == "__main__":
+    main()
