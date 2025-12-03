@@ -7,3 +7,10 @@ End-to-end pipeline:
 3) mesh.obj -> mesh.usd (via headless Blender)
 
 """
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
