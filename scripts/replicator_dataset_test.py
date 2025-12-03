@@ -6,8 +6,7 @@ from pathlib import Path
 
 # ---------- Paths / setup ----------
 ROOT = Path(__file__).resolve().parents[1]   # project root (up from scripts/)
-PHOTO_DIR = ROOT / "data" / "test_photos"
-OUTPUT_DIR = ROOT / "data" / "datasets" / "photo_test"
+OUTPUT_DIR = ROOT / "data" / "datasets" / "cube_test"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 IMAGE_PATHS = [
