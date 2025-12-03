@@ -36,12 +36,20 @@ with rep.new_layer():
     )
     ground.set_material(ground_mat)
 
+    # ---------- Cube ----------
     print("Creating cube...")
     cube = rep.create.cube(
         semantics=[("class", "cube")],
         position=(0, 0.5, -2.0),
         scale=0.5,
     )
+    # Bright colored cube
+    cube_mat = rep.create.material_omnipbr(
+        diffuse=[0.9, 0.2, 0.2],   # red-ish
+        roughness=0.3,
+    )
+    cube.set_material(cube_mat)
+
 
     print("Creating camera + render product...")
     camera = rep.create.camera(position=(0, 1, 1), look_at=(0, 0.5, -2.0))
