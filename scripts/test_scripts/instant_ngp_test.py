@@ -73,3 +73,39 @@ def prepare_workspace(images_dir: Path, workspace_root: Path, scene_name: str) -
     print(f"Prepared workspace at: {scene_dir}")
     print(f"Copied images to:      {images_out}")
     return scene_dir
+
+# ====== STEP 2: Run colmap2nerf (which runs COLMAP) ======
+# This estimates camera poses and creates transforms.json for nerf training.
+
+def run_colmap2nerf(scene_dir: Path):
+    """
+    Calls scripts/colmap2nerf.py to:
+      - run COLMAP SfM
+      - produce transforms.json in scene_dir
+      - organize images
+    """
+    images_dir = scene_dir / "images"
+    colmap_db = scene_dir / "colmap" / "database.db"
+    colmap_sparse = scene_dir / "colmap" / "sparse"
+    transforms_path = scene_dir / "transforms.json"
+
+    cmd = [
+        sys.executable,
+        str(INSTANT_NGP_ROOT / "scripts" / "colmap2nerf.py"),
+        "--run_colmap",
+        "--colmap_matcher", "exhaustive",
+        "--aabb_scale", str(AABB_SCALE),
+        "--images", str(images_dir),
+        "--out", str(transforms_path),
+        "--db", str(colmap_db),
+        "--text", str(colmap_sparse),
+    ]
+
+    # colmap2nerf wants to be run from instant-ngp root usually
+    run_cmd(cmd, cwd=INSTANT_NGP_ROOT)
+
+    if not transforms_path.exists():
+        raise RuntimeError(f"colmap2nerf did not produce {transforms_path}")
+
+    print(f"Generated transforms.json at: {transforms_path}")
+    return transforms_path
