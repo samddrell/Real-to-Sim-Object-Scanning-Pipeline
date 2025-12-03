@@ -4,7 +4,7 @@ End-to-end pipeline:
 
 1) images -> COLMAP + transforms.json (via colmap2nerf.py)
 2) transforms.json -> trained NeRF + mesh.obj (via scripts/run.py)
-3) mesh.obj -> mesh.usd (via headless Blender)
+3) mesh.obj -> mesh.usd (via headless Isaac)
 
 """
 import omni.kit.asset_converter   
@@ -25,7 +25,7 @@ INSTANT_NGP_ROOT = Path(r"C:\Apps\Instant-NGP-for-RTX-2000").resolve()
 ISAAC_PYTHON = Path(r"C:\isaac-sim\python.bat").resolve()
 
 # Where to store per-object workspaces
-DEFAULT_WORKSPACE_ROOT = Path(__file__).resolve().parent / "data"
+DEFAULT_WORKSPACE_ROOT = (Path(__file__).resolve().parent.parent.parent / "data").resolve()
 
 # NeRF training settings
 N_STEPS = 30000  # tune based on quality/time tradeoff
@@ -169,7 +169,7 @@ def convert_mesh_to_usd_with_isaac(mesh_obj: Path, usd_out: Path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Images -> NeRF (instant-ngp) -> Mesh (OBJ) -> USD (Blender headless)"
+        description="Images -> NeRF (instant-ngp) -> Mesh (OBJ) -> USD (Isaac headless)"
     )
     parser.add_argument(
         "--images",
@@ -219,7 +219,7 @@ def main():
     usd_out = output_dir / f"{scene_name}.usd"
     temp_script = output_dir / "convert_obj_to_usd_tmp.py"
 
-    convert_mesh_to_usd_with_isaac(mesh_out, usd_out, temp_script)
+    convert_mesh_to_usd_with_isaac(mesh_out, usd_out)
 
     print("\n=== PIPELINE COMPLETE ===")
     print(f"Scene dir : {scene_dir}")
