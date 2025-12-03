@@ -22,8 +22,19 @@ print("Available writers in WriterRegistry:", rep.WriterRegistry.get_writers())
 # ---------- Build scene ----------
 with rep.new_layer():
 
+    # ---------- Ground plane ----------
     print("Creating ground plane...")
-    rep.create.plane(scale=50, semantics=[("class", "ground")])
+    ground = rep.create.plane(
+        scale=10,
+        position=(0, 0, 0),
+        semantics=[("class", "ground")],
+    )
+    # Light gray ground
+    ground_mat = rep.create.material_omnipbr(
+        diffuse=[0.6, 0.6, 0.6],
+        roughness=0.4,
+    )
+    ground.set_material(ground_mat)
 
     print("Creating cube...")
     cube = rep.create.cube(
