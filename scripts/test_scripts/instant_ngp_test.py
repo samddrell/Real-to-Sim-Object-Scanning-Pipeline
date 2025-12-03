@@ -32,3 +32,17 @@ AABB_SCALE = 16  # typical for object-scale scenes
 
 # Marching cubes / mesh fidelity knob is controlled inside run.py via default settings,
 # plus mesh resolution flags in some builds. 
+
+# ====== UTILS ======
+
+def run_cmd(cmd, cwd=None):
+    print(f"\n[RUN] {cmd}\n   (cwd={cwd})")
+    result = subprocess.run(cmd, cwd=cwd, check=True)
+    return result
+
+
+def ensure_empty_dir(path: Path):
+    if path.exists():
+        # be careful here: this deletes previous results
+        shutil.rmtree(path)
+    path.mkdir(parents=True, exist_ok=True)
