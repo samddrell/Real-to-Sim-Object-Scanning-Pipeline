@@ -18,6 +18,14 @@ with rep.new_layer():
     # Ground plane
     rep.create.plane(scale=50, semantics=[("class", "ground")])
 
+    # Simple cube object
+    cube = rep.create.cube(
+        semantics=[("class", "cube")],
+        position=(0, 0.5, -2.0),
+        scale=0.5,
+    )
+
+
     # Camera
     camera = rep.create.camera(position=(0, 1, 2), look_at=(0, 0, 0))
     render_product = rep.create.render_product(camera, (640, 480))
