@@ -3,12 +3,12 @@ simulation_app = SimulationApp({"headless": True})
 
 import omni.replicator.core as rep
 from pathlib import Path
-import os
 
-# Resolve paths relative to this script's location
-ROOT = Path(__file__).resolve().parents[1]   # go up from scripts/ to project root
+# ---------- Paths / setup ----------
+ROOT = Path(__file__).resolve().parents[1]   # project root (up from scripts/)
 PHOTO_DIR = ROOT / "data" / "test_photos"
 OUTPUT_DIR = ROOT / "data" / "datasets" / "photo_test"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 IMAGE_PATHS = [
     str(p) for p in PHOTO_DIR.iterdir()
@@ -18,36 +18,49 @@ IMAGE_PATHS = [
 if not IMAGE_PATHS:
     raise RuntimeError(f"No images found in {PHOTO_DIR}")
 
+# ---------- Build scene ----------
 with rep.new_layer():
-    rep.create.plane(scale=50)
+
+    # Ground plane
+    rep.create.plane(scale=50, semantics=[("class", "ground")])
+
+    # Camera
     camera = rep.create.camera(position=(0, 1, 2), look_at=(0, 0, 0))
     render_product = rep.create.render_product(camera, (640, 480))
+
+    # Light
     rep.create.light(light_type="Dome", intensity=8000)
 
-    cards = []
-    for img in IMAGE_PATHS:
-        card = rep.create.plane(
-            semantics=[("class", "photo")],
-            position=(0, 0, 0),
-            scale=1.0,
-        )
-        mat = rep.create.material_omnipbr()
-        mat.set_texture("diffuse_texture", img)
-        card.set_material(mat)
-        cards.append(card)
+    # Single card that we’ll keep re-texturing
+    card = rep.create.plane(
+        semantics=[("class", "photo")],
+        position=(0, 0, -1.5),
+        scale=1.0,
+    )
 
-    @rep.randomizer
-    def photo_randomizer():
-        card = rep.distribution.choice(cards)
+    # ---------- Randomization loop ----------
+    # For 30 frames, randomize the card’s texture and pose
+    with rep.trigger.on_frame(num_frames=30):
         with card:
+            # Random texture from your PHOTO_DIR images
+            rep.randomizer.texture(
+                textures=IMAGE_PATHS,
+                project_uvw=True,
+            )
+            # Random pose
             rep.modify.pose(
-                position=rep.distribution.uniform((-0.5, 0.3, -1.0), (0.5, 0.8, -2.0)),
-                rotation=rep.distribution.uniform((0, -45, 0), (0, 45, 0)),
+                position=rep.distribution.uniform(
+                    (-0.5, 0.3, -2.0),   # z = -2.0 (lower)
+                    (0.5, 0.8, -1.0),   # z = -1.0 (upper)
+                ),
+                rotation=rep.distribution.uniform(
+                    (0, -45, 0),
+                    (0, 45, 0),
+                ),
                 scale=rep.distribution.uniform(0.5, 1.2),
             )
 
-    photo_randomizer.register(trigger=rep.trigger.OnFrame())
-
+    # ---------- Writer ----------
     writer = rep.WriterRegistry.get("BasicWriter")
     writer.initialize(
         output_dir=str(OUTPUT_DIR),
@@ -56,5 +69,6 @@ with rep.new_layer():
     )
     writer.attach([render_product])
 
-rep.orchestrator.run_until_complete(30)
+# Run until our on_frame trigger is done
+rep.orchestrator.run()
 simulation_app.close()
