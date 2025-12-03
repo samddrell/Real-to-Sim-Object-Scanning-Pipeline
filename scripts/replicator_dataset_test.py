@@ -9,6 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]   # project root (up from scripts/)
 OUTPUT_DIR = ROOT / "data" / "datasets" / "cube_test"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+print("Replicator cube test starting.")
+print(f"OUTPUT_DIR = {OUTPUT_DIR}")
+
 # ---------- Build scene ----------
 with rep.new_layer():
 
