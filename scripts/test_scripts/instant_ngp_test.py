@@ -109,3 +109,32 @@ def run_colmap2nerf(scene_dir: Path):
 
     print(f"Generated transforms.json at: {transforms_path}")
     return transforms_path
+
+# ====== STEP 3: Train NeRF + export mesh with run.py ======
+
+def train_nerf_and_export_mesh(scene_dir: Path, mesh_out: Path, snapshot_out: Path):
+    """
+    Uses scripts/run.py in instant-ngp to:
+      - train for N_STEPS iterations
+      - save a snapshot
+      - export a marching-cubes mesh to mesh_out (OBJ/PLY depending on extension)
+    """
+    cmd = [
+        sys.executable,
+        str(INSTANT_NGP_ROOT / "scripts" / "run.py"),
+        "--mode", "nerf",
+        "--scene", str(scene_dir),
+        "--n_steps", str(N_STEPS),
+        "--save_snapshot", str(snapshot_out),
+        "--save_mesh", str(mesh_out),
+    ]
+
+    # This leverages run.py's --save_mesh flag, which triggers marching cubes
+    # and writes an OBJ/PLY mesh of the NeRF. :contentReference[oaicite:6]{index=6}
+    run_cmd(cmd, cwd=INSTANT_NGP_ROOT)
+
+    if not mesh_out.exists():
+        raise RuntimeError(f"run.py did not produce mesh at {mesh_out}")
+
+    print(f"Saved NeRF snapshot to: {snapshot_out}")
+    print(f"Exported mesh to:       {mesh_out}")
