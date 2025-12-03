@@ -25,9 +25,8 @@ with rep.new_layer():
         scale=0.5,
     )
 
-
-    # Camera
-    camera = rep.create.camera(position=(0, 1, 2), look_at=(0, 0, 0))
+    # Camera looking at the cube
+    camera = rep.create.camera(position=(0, 1, 1), look_at=(0, 0.5, -2.0))
     render_product = rep.create.render_product(camera, (640, 480))
 
     # Light
