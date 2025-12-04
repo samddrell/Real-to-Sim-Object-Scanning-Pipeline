@@ -211,7 +211,23 @@ def main():
     scene_dir = prepare_workspace(images_dir, workspace_root, scene_name)
 
     # Step 2: COLMAP + transforms.json
+    print("\n[STEP 2] Running COLMAP + colmap2nerf...")
     run_colmap2nerf(scene_dir)
+    
+    # Verify COLMAP output
+    transforms_path = scene_dir / "transforms.json"
+    if transforms_path.exists():
+        print(f"✓ transforms.json created at: {transforms_path}")
+        print(f"  File size: {transforms_path.stat().st_size} bytes")
+    else:
+        print(f"✗ ERROR: transforms.json NOT found at: {transforms_path}")
+        print(f"  Scene dir contents:")
+        for item in sorted(scene_dir.iterdir()):
+            if item.is_dir():
+                print(f"    [DIR]  {item.name}/")
+            else:
+                print(f"    [FILE] {item.name} ({item.stat().st_size} bytes)")
+        raise RuntimeError("COLMAP step failed: transforms.json not produced")
 
     # Step 3: train NeRF + export mesh
     output_dir = scene_dir / "output"
@@ -220,19 +236,68 @@ def main():
     mesh_out = output_dir / f"{scene_name}_mesh.obj"
     snapshot_out = output_dir / f"{scene_name}_nerf.msgpack"
 
+    print("\n[STEP 3] Training NeRF and exporting mesh...")
     train_nerf_and_export_mesh(scene_dir, mesh_out, snapshot_out)
+    
+    # Verify NeRF training output
+    if mesh_out.exists():
+        print(f"✓ Mesh OBJ created at: {mesh_out}")
+        print(f"  File size: {mesh_out.stat().st_size} bytes")
+    else:
+        print(f"✗ ERROR: Mesh OBJ NOT found at: {mesh_out}")
+        print(f"  Output dir contents:")
+        if output_dir.exists():
+            for item in sorted(output_dir.iterdir()):
+                if item.is_dir():
+                    print(f"    [DIR]  {item.name}/")
+                else:
+                    print(f"    [FILE] {item.name} ({item.stat().st_size} bytes)")
+        else:
+            print(f"    Output dir does not exist: {output_dir}")
+        raise RuntimeError("NeRF training step failed: mesh OBJ not produced")
+    
+    if snapshot_out.exists():
+        print(f"✓ NeRF snapshot created at: {snapshot_out}")
+        print(f"  File size: {snapshot_out.stat().st_size} bytes")
+    else:
+        print(f"⚠ WARNING: NeRF snapshot not found at: {snapshot_out}")
+        print(f"  This may be okay if run.py doesn't support --save_snapshot")
 
     # Step 4: OBJ -> USD via Isaac headless
     usd_out = output_dir / f"{scene_name}.usd"
     temp_script = output_dir / "convert_obj_to_usd_tmp.py"
 
-    convert_mesh_to_usd_with_isaac(mesh_out, usd_out)
+    print("\n[STEP 4] Converting OBJ mesh to USD via Isaac...")
+    try:
+        convert_mesh_to_usd_with_isaac(mesh_out, usd_out)
+    except Exception as e:
+        print(f"✗ ERROR during USD conversion: {e}")
+        print(f"  Input mesh: {mesh_out} (exists: {mesh_out.exists()})")
+        print(f"  Output path: {usd_out}")
+        raise
+    
+    # Verify USD conversion output
+    if usd_out.exists():
+        print(f"✓ USD asset created at: {usd_out}")
+        print(f"  File size: {usd_out.stat().st_size} bytes")
+    else:
+        print(f"✗ ERROR: USD asset NOT found at: {usd_out}")
+        print(f"  Output dir contents after conversion:")
+        for item in sorted(output_dir.iterdir()):
+            if item.is_dir():
+                print(f"    [DIR]  {item.name}/")
+            else:
+                print(f"    [FILE] {item.name} ({item.stat().st_size} bytes)")
+        raise RuntimeError("USD conversion step failed: USD file not produced")
 
-    print("\n=== PIPELINE COMPLETE ===")
-    print(f"Scene dir : {scene_dir}")
-    print(f"Mesh OBJ  : {mesh_out}")
-    print(f"USD asset : {usd_out}")
-    print("You can now bring this USD into Isaac Sim / Omniverse Replicator.")
+    print("\n" + "="*60)
+    print("=== PIPELINE COMPLETE ===")
+    print("="*60)
+    print(f"Scene directory : {scene_dir}")
+    print(f"Mesh OBJ        : {mesh_out}")
+    print(f"USD asset       : {usd_out}")
+    print("\nYou can now bring this USD into Isaac Sim / Omniverse Replicator.")
+    print("="*60)
 
 
 if __name__ == "__main__":
