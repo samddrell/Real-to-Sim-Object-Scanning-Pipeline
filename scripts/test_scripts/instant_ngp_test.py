@@ -7,7 +7,8 @@ End-to-end pipeline:
 3) mesh.obj -> mesh.usd (via headless Isaac)
 
 """
-import omni.kit.asset_converter   
+from omni.isaac.kit import SimulationApp
+simulation_app = SimulationApp({"headless": True})
 
 import argparse
 import os
@@ -144,26 +145,32 @@ def train_nerf_and_export_mesh(scene_dir: Path, mesh_out: Path, snapshot_out: Pa
 # ====== STEP 4: ISAAC headless OBJ -> USD ======
 
 def convert_mesh_to_usd_with_isaac(mesh_obj: Path, usd_out: Path):
-    mgr = omni.kit.asset_converter.get_instance()
+    import asyncio
+    import carb
+    import omni.kit.asset_converter as asset_converter
 
-    def progress(step, total):
-        print(f"[Convert] {step}/{total}")
+    def progress_callback(progress, total_steps):
+        print(f"[Convert] {progress}/{total_steps}")
 
-    task = mgr.create_converter_task(
+    # Set up conversion context (flags optional, these are just defaults)
+    ctx = asset_converter.AssetConverterContext()
+
+    instance = asset_converter.get_instance()
+    task = instance.create_converter_task(
         str(mesh_obj),
         str(usd_out),
-        progress,
+        progress_callback,
+        ctx,
     )
 
-    import asyncio
     loop = asyncio.get_event_loop()
     success = loop.run_until_complete(task.wait_until_finished())
 
     if not success:
-        print("Conversion failed:", task.get_error_message())
+        carb.log_error(task.get_status(), task.get_detailed_error())
         raise RuntimeError("Asset conversion failed")
 
-    print(f"[OK] Converted {mesh_obj} → {usd_out}")
+    print(f"[OK] Converted {mesh_obj} -> {usd_out}")
 
 # ====== MAIN PIPELINE ======
 
@@ -229,4 +236,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        # Cleanly shut down Isaac / Kit
+        simulation_app.close()
