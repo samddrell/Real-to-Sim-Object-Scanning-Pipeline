@@ -13,7 +13,7 @@
     - Produces a "transform.json" file that contains camera information for each image.
     - Will leave out photos it deems bad. A Good original photo sample set is crucial to ensure that each image is included.
     - To run COLMAP in isolation, run the following commands:
-    
+
 ```
 cd C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline
 
@@ -27,3 +27,9 @@ C:\isaac-sim\python.bat scripts\third_party\colmap2nerf_compat.py `
   --text "C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\bottle01\colmap\auto_sparse" `
   --colmap_camera_model PINHOLE
 ```
+### A Note on COLMAP
+The file we use to produce camera data for our nerf in instant ngp is from the instant ngp library. It, unfortunately, is built around an old version of COLMAP.
+Because the full COLMAP application must be installed to run this code, a few changes have been made to the file "colmap2nerf_compat.py" to avoid having to install
+an old version of COLMAP. COLMAP 3.8+ now requires valid parameter lists for many camera models, so we have patched in two specific ways: 1) we changed the default camera 
+to PINHOLE instead of OPENCV, and 2) we only include camera_params if the user provides them. The changed file has been provided for your convenience, and the relevant 
+revisions have been indicated via comments on lines 36 and 125.
