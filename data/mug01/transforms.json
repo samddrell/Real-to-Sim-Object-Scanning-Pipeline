@@ -17,7 +17,7 @@
   "aabb_scale": 16,
   "frames": [
     {
-      "file_path": "./data\\mug01\\images/IMG_6575.JPG",
+      "file_path": "./images/IMG_6575.JPG",
       "sharpness": 100.02863684165929,
       "transform_matrix": [
         [
@@ -47,7 +47,7 @@
       ]
     },
     {
-      "file_path": "./data\\mug01\\images/IMG_6576.JPG",
+      "file_path": "./images/IMG_6576.JPG",
       "sharpness": 56.02306248311219,
       "transform_matrix": [
         [
@@ -77,7 +77,7 @@
       ]
     },
     {
-      "file_path": "./data\\mug01\\images/IMG_6594.JPG",
+      "file_path": "./images/IMG_6594.JPG",
       "sharpness": 103.23644584151248,
       "transform_matrix": [
         [
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "file_path": "./data\\mug01\\images/IMG_6579.JPG",
+      "file_path": "./images/IMG_6579.JPG",
       "sharpness": 101.74591362067073,
       "transform_matrix": [
         [
@@ -137,7 +137,7 @@
       ]
     },
     {
-      "file_path": "./data\\mug01\\images/IMG_6591.JPG",
+      "file_path": "./images/IMG_6591.JPG",
       "sharpness": 62.47307442709744,
       "transform_matrix": [
         [
@@ -167,7 +167,7 @@
       ]
     },
     {
-      "file_path": "./data\\mug01\\images/IMG_6582.JPG",
+      "file_path": "./images/IMG_6582.JPG",
       "sharpness": 74.00246421330209,
       "transform_matrix": [
         [
@@ -197,7 +197,7 @@
       ]
     },
     {
-      "file_path": "./data\\mug01\\images/IMG_6584.JPG",
+      "file_path": "./images/IMG_6584.JPG",
       "sharpness": 104.48861942830128,
       "transform_matrix": [
         [
