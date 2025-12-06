@@ -11,6 +11,7 @@ data/tests/
 data/mug01/colmap/
 data/mug01/images/
 data/bottle01/colmap/
+data/bottle02/colmap/
 
 # If you want photos to stay local/private:
 # data/photos_raw/
