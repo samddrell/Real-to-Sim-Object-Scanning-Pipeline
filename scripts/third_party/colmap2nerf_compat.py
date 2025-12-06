@@ -33,6 +33,7 @@ def parse_args():
 	parser.add_argument("--run_colmap", action="store_true", help="run colmap first on the image folder")
 	parser.add_argument("--colmap_matcher", default="sequential", choices=["exhaustive","sequential","spatial","transitive","vocab_tree"], help="Select which matcher colmap should use. Sequential for videos, exhaustive for ad-hoc images.")
 	parser.add_argument("--colmap_db", default="colmap.db", help="colmap database filename")
+	# NOTE: Modified to make PINHOLE the default camera model
 	parser.add_argument("--colmap_camera_model", default="PINHOLE", choices=["SIMPLE_PINHOLE", "PINHOLE", "SIMPLE_RADIAL", "RADIAL", "OPENCV", "SIMPLE_RADIAL_FISHEYE", "RADIAL_FISHEYE", "OPENCV_FISHEYE"], help="Camera model")
 	parser.add_argument("--colmap_camera_params", default="", help="Intrinsic parameters, depending on the chosen model. Format: fx,fy,cx,cy,dist")
 	parser.add_argument("--images", default="images", help="Input path to the images.")
@@ -121,7 +122,7 @@ def run_colmap(args):
 	if os.path.exists(db):
 		os.remove(db)
 	
-	# NOTE: Modified to build the command string step by step for better readability
+	# NOTE: Modified to only include camera_params if the user provides them
 	# do_system(f"{colmap_binary} feature_extractor --ImageReader.camera_model {args.colmap_camera_model} --ImageReader.camera_params \"{args.colmap_camera_params}\" --SiftExtraction.estimate_affine_shape=true --SiftExtraction.domain_size_pooling=true --ImageReader.single_camera 1 --database_path {db} --image_path {images}")
 	feature_cmd = (
 		f"{colmap_binary} feature_extractor "
