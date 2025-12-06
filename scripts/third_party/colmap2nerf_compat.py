@@ -120,7 +120,26 @@ def run_colmap(args):
 		sys.exit(1)
 	if os.path.exists(db):
 		os.remove(db)
-	do_system(f"{colmap_binary} feature_extractor --ImageReader.camera_model {args.colmap_camera_model} --ImageReader.camera_params \"{args.colmap_camera_params}\" --SiftExtraction.estimate_affine_shape=true --SiftExtraction.domain_size_pooling=true --ImageReader.single_camera 1 --database_path {db} --image_path {images}")
+	
+	# NOTE: Modified to build the command string step by step for better readability
+	# do_system(f"{colmap_binary} feature_extractor --ImageReader.camera_model {args.colmap_camera_model} --ImageReader.camera_params \"{args.colmap_camera_params}\" --SiftExtraction.estimate_affine_shape=true --SiftExtraction.domain_size_pooling=true --ImageReader.single_camera 1 --database_path {db} --image_path {images}")
+	feature_cmd = (
+		f"{colmap_binary} feature_extractor "
+		f"--ImageReader.camera_model {args.colmap_camera_model} "
+		f"--SiftExtraction.estimate_affine_shape=true "
+		f"--SiftExtraction.domain_size_pooling=true "
+		f"--ImageReader.single_camera 1 "
+		f"--database_path {db} "
+		f"--image_path {images}"
+	)
+	# Only pass camera_params if user actually provided something
+	if args.colmap_camera_params != "":
+		feature_cmd += f" --ImageReader.camera_params \"{args.colmap_camera_params}\""
+
+	do_system(feature_cmd)
+
+	# NOTE: End of modification
+
 	match_cmd = f"{colmap_binary} {args.colmap_matcher}_matcher --database_path {db}"
 	if args.vocab_path:
 		match_cmd += f" --VocabTreeMatching.vocab_tree_path {args.vocab_path}"
