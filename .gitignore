@@ -7,6 +7,7 @@ __pycache__/
 
 # Generated datasets
 data/datasets/
+data/tests/
 
 # If you want photos to stay local/private:
 # data/photos_raw/
