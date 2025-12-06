@@ -99,7 +99,7 @@ def run_colmap2nerf(scene_dir: Path):
         "--aabb_scale", str(AABB_SCALE),
         "--images", str(images_dir),
         "--out", str(transforms_path),
-        "--db", str(colmap_db),
+        "--colmap_db", str(colmap_db),
         "--text", str(colmap_sparse),
     ]
 
@@ -196,6 +196,11 @@ def main():
         default=str(DEFAULT_WORKSPACE_ROOT),
         help=f"Root folder for per-object workspaces (default: {DEFAULT_WORKSPACE_ROOT})",
     )
+    parser.add_argument(
+        "--skip_colmap",
+        action="store_true",
+        help="Skip COLMAP step (requires pre-existing transforms.json)",
+    )
     args = parser.parse_args()
 
     images_dir = Path(args.images).resolve()
@@ -211,23 +216,34 @@ def main():
     scene_dir = prepare_workspace(images_dir, workspace_root, scene_name)
 
     # Step 2: COLMAP + transforms.json
-    print("\n[STEP 2] Running COLMAP + colmap2nerf...")
-    run_colmap2nerf(scene_dir)
-    
-    # Verify COLMAP output
-    transforms_path = scene_dir / "transforms.json"
-    if transforms_path.exists():
-        print(f"✓ transforms.json created at: {transforms_path}")
-        print(f"  File size: {transforms_path.stat().st_size} bytes")
+    if not args.skip_colmap:
+        print("\n[STEP 2] Running COLMAP + colmap2nerf...")
+        run_colmap2nerf(scene_dir)
+        
+        # Verify COLMAP output
+        transforms_path = scene_dir / "transforms.json"
+        if transforms_path.exists():
+            print(f"✓ transforms.json created at: {transforms_path}")
+            print(f"  File size: {transforms_path.stat().st_size} bytes")
+        else:
+            print(f"✗ ERROR: transforms.json NOT found at: {transforms_path}")
+            print(f"  Scene dir contents:")
+            for item in sorted(scene_dir.iterdir()):
+                if item.is_dir():
+                    print(f"    [DIR]  {item.name}/")
+                else:
+                    print(f"    [FILE] {item.name} ({item.stat().st_size} bytes)")
+            raise RuntimeError("COLMAP step failed: transforms.json not produced")
     else:
-        print(f"✗ ERROR: transforms.json NOT found at: {transforms_path}")
-        print(f"  Scene dir contents:")
-        for item in sorted(scene_dir.iterdir()):
-            if item.is_dir():
-                print(f"    [DIR]  {item.name}/")
-            else:
-                print(f"    [FILE] {item.name} ({item.stat().st_size} bytes)")
-        raise RuntimeError("COLMAP step failed: transforms.json not produced")
+        print("\n[STEP 2] Skipping COLMAP (--skip_colmap flag set)")
+        transforms_path = scene_dir / "transforms.json"
+        if transforms_path.exists():
+            print(f"✓ Found existing transforms.json at: {transforms_path}")
+            print(f"  File size: {transforms_path.stat().st_size} bytes")
+        else:
+            print(f"✗ ERROR: transforms.json not found and --skip_colmap was set")
+            print(f"  Expected at: {transforms_path}")
+            raise RuntimeError("COLMAP step skipped but transforms.json not found")
 
     # Step 3: train NeRF + export mesh
     output_dir = scene_dir / "output"
