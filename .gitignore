@@ -8,6 +8,8 @@ __pycache__/
 # Generated datasets
 data/datasets/
 data/tests/
+data/mug01/colmap/
+data/mug01/images/
 
 # If you want photos to stay local/private:
 # data/photos_raw/
