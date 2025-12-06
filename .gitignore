@@ -13,3 +13,6 @@ data/mug01/images/
 
 # If you want photos to stay local/private:
 # data/photos_raw/
+
+*.log
+*.db
