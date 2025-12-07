@@ -57,7 +57,7 @@ world = World(
     physics_prim_path="/physicsScene",
     backend="numpy",
 )
-world.scene.add_default_ground_plane()   # ✅ back to the regular ground
+# world.scene.add_default_ground_plane()   # ✅ back to the regular ground
 world.reset()
 world.play()
 print("WORLD PLAYING?", world.is_playing())
@@ -143,7 +143,7 @@ subject = rep.create.from_usd(
 # Optionally adjust its pose (e.g., center on origin, slightly above ground)
 with subject:
     rep.modify.pose(
-        position=(0.0, 0.0, 2),
+        position=(0.0, 0.0, 1.0),
         # You can tweak this if your asset is off-center or rotated oddly
         rotation=(90.0, 0.0, 0.0),
     )
