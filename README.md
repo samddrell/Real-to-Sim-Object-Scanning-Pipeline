@@ -67,14 +67,18 @@ C:\isaac-sim\python.bat src\convert_obj_to_usd.py `
   --usd  "C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\bottle02\bottle01.usd"
 ```
 
+### A Note on Mesh Resolution
+You may notice that the bottle's mesh is quite low resolution and chunky; the stickers on the sides are not nearly as clear in the mesh as they were in the nerf, and the bottle itself is not smooth. This may cause the yolo model to learn the irregular geometry of this bottle, but it also may cause it to learn less specific details that indicate that it is a bottle. This begs the question: what qualities must be present in a synthetic dataset to improve object detection? That is the question we seek to address.
+
 ### 5. Run Isaac Replicator script
 ```
 # From Repo Root <path>\Real-to-Sim-Object-Scanning-Pipeline>
+# NOTE: The frame count can be minized for faster test runs.
 C:\isaac-sim\python.bat `
    .\scripts\test_scripts\replicator_subject_test.py `
-   --usd .\data\bottle01\bottle01.usd `
+   --usd .\data\bottle02\bottle02.usd `
    --frames 3000 `
-   --out "E:\synthetic_datasets\bottle01"
+   --out "E:\synthetic_datasets\bottle02"
 ```
 
 ### 6. Run baseline YOLO test
@@ -91,10 +95,18 @@ cd C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline
 # Run the script with that env's python
 python .\src\baseline_yolo_control.py
 ```
+- COMMENT ON TEST FILE LOCATION OR FIND A WAY TO INCLUDE THESE IN REPO WITHOUT HAVING THEM ON MY MACHINE
 
-
-
-
+### Baseline Test Results
+Good precision - when it detects bottle, there is bottle. Recall is low, this shows that it can't always find the bottle in the first place. Plainly, when it does find a bottle, it's right. Of course, every image in our test set includes the bottle. At first, it may seem like it would skew the recall higher (and maybe, in fact, it does), but because the recall is still so low, we still need to improve that score by training the model on the bottle in different conditions. This is what our synthetic dataset seeks to solve! 
+        "trained_test": 
+            "tag": "trained_test",
+            "map50_95": 0.535544662232452,
+            "map50": 0.7758627521447564,
+            "map75": 0.6100017825360953,
+            "precision": 0.9480671582561665,
+            "recall": 0.61537068458545,
+- INCLUDE CONFUSION MATRIX AND OTHER GRAPHS
 
 ## Section X: Domain Randomization Strategy for Synthetic Object Rendering
 
