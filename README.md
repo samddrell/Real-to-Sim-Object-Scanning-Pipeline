@@ -56,3 +56,13 @@ cd C:\Apps\Instant-NGP-for-RTX-2000
 .\instant-ngp.exe --scene "C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\bottle02"
 
 ```
+
+### 4. Convert OBJ to USD
+The ISAAC Replicator cannot build scenes from .obj files, so we must convert our mesh object to a .usd file. Fortunately, ISAAC does have this conversion feature built in.
+To run the ISAAC converter, run the following code. Of course, customize file paths.
+
+```
+C:\isaac-sim\python.bat src\convert_obj_to_usd.py `
+  --mesh "C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\bottle02\transforms_base.obj" `
+  --usd  "C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\bottle02\bottle01.usd"
+```
