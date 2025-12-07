@@ -44,7 +44,10 @@ IMG_SIZE = 640        # image size
 EPOCHS = 50           # training epochs
 BATCH_SIZE = 16       # batch size
 DEVICE = "0"          # "0" for first GPU, "cpu" for CPU-only
-TEST_SPLIT = "val"    # "val" or "test" (must exist in your data.yaml)
+TEST_SPLIT = "test"    # "val" or "test" (must exist in your data.yaml)
+
+# NEW: splits to evaluate on *after training*
+EVAL_SPLITS = ["val", "test"]
 
 # If True, skip the zero-shot eval of the COCO-pretrained model
 SKIP_PRETRAINED_EVAL = False
@@ -119,25 +122,27 @@ def main():
         exist_ok=True
     )
 
-    # After training, model now points to best weights
-    print("\n=== Step 3: Evaluating trained model on the same split ===")
-    trained_metrics = model.val(
-        data=str(DATA_YAML),
-        imgsz=IMG_SIZE,
-        split=TEST_SPLIT,
-        device=DEVICE
-    )
+    # After training, 'model' now points to the best weights
+    print("\n=== Step 3: Evaluating trained model on val and test splits ===")
 
-    # You can rename tag depending on what DATA_YAML is (real-only, real+synthetic, etc.)
-    trained_tag = "trained_real_only"
-    trained_dict = metrics_to_dict(trained_tag, trained_metrics)
-    metrics_summary[trained_tag] = trained_dict
+    for split in EVAL_SPLITS:
+        print(f"\n--- Evaluating trained model on split='{split}' ---")
+        split_metrics = model.val(
+            data=str(DATA_YAML),
+            imgsz=IMG_SIZE,
+            split=split,
+            device=DEVICE,
+        )
 
-    print("\nControl baseline (after training):")
-    print(f"  mAP50-95: {trained_dict['map50_95']:.4f}")
-    print(f"  mAP50:    {trained_dict['map50']:.4f}")
-    print(f"  Precision:{trained_dict['precision']:.4f}")
-    print(f"  Recall:   {trained_dict['recall']:.4f}")
+        tag = f"trained_{split}"
+        split_dict = metrics_to_dict(tag, split_metrics)
+        metrics_summary[tag] = split_dict
+
+        print(f"\nResults on {split}:")
+        print(f"  mAP50-95: {split_dict['map50_95']:.4f}")
+        print(f"  mAP50:    {split_dict['map50']:.4f}")
+        print(f"  Precision:{split_dict['precision']:.4f}")
+        print(f"  Recall:   {split_dict['recall']:.4f}")
 
     # 4) Save metrics to JSON for later comparison
     out_json = run_dir / "baseline_metrics.json"

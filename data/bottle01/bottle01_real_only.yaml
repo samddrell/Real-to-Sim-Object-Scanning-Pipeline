@@ -6,9 +6,7 @@ path: C:/Users/samdd/Documents/school/ML/Real-to-Sim-Object-Scanning-Pipeline/da
 # Image subfolders (relative to "path")
 train: images/train
 val: images/val
-# When you capture your new test images and label them, add:
-# test: images/test
-
+test: "E:/datasets/bottle01/Real Datasets/test_set/images"
 # Class names
 names:
   0: bottle
