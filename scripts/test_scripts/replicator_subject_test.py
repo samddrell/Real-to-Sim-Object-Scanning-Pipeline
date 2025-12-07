@@ -122,6 +122,25 @@ rp = rep.create.render_product(
     resolution=(640, 480),
 )
 
+# ---------------------------------------------------------------------
+# 🔹 NEW: grab the underlying camera prim & base transform
+# ---------------------------------------------------------------------
+cam_prims_info = camera.get_output_prims()
+cam_prim = cam_prims_info["prims"][0]
+print("Camera prim path:", cam_prim.GetPath())
+
+# Read base translate/rotate so we can jitter around them
+base_cam_translate = cam_prim.GetAttribute("xformOp:translate").Get()
+base_cam_rotate = cam_prim.GetAttribute("xformOp:rotateXYZ").Get()
+
+if base_cam_translate is None:
+    base_cam_translate = Gf.Vec3d(2.0, 2.0, 2.0)
+if base_cam_rotate is None:
+    base_cam_rotate = Gf.Vec3f(0.0, 0.0, 0.0)
+
+base_cam_translate = np.array(list(base_cam_translate), dtype=float)
+base_cam_rotate = np.array(list(base_cam_rotate), dtype=float)
+
 
 # ---------------------------------------------------------------------
 # PNG writer
@@ -179,11 +198,43 @@ while simulation_app.is_running() and frame_idx < target_frames:
         )
         key_light_prim.GetAttribute("inputs:color").Set(color)
 
-        # Let Replicator process its triggers (lighting randomization)
-        # rep.orchestrator.step()
+        # --- 🔹 NEW: randomize CAMERA pose each frame ---
 
-        # if frame_idx % 10 == 0:
-        print(f"Frame {frame_idx}...")
+        xy_jitter = np.random.uniform(-12, 12)
+        # Position jitter around base (controls distance & XY orbit)
+        pos_jitter = np.array([
+            xy_jitter,   # X jitter
+            # np.random.uniform(-5, 5),   # Y jitter
+            xy_jitter,
+            np.random.uniform(-0.3, 0.3),   # Z jitter
+        ])
+        # new_translate = base_cam_translate + pos_jitter
+        # cam_prim.GetAttribute("xformOp:translate").Set(tuple(new_translate.tolist()))
+
+        # base_cam_translate can just be your original (2,2,2) if you like
+        base_cam_translate = np.array([2.0, 2.0, 2.0], dtype=float)
+        new_translate = base_cam_translate + pos_jitter
+
+        # Re-apply look_at each frame so we never lose the subject
+        with camera:
+            rep.modify.pose(
+                position=tuple(new_translate.tolist()),
+                look_at=subject,
+            )
+
+
+        # Small tilt perturbations (XY)
+        rot_jitter = np.array([
+            np.random.uniform(-5.0, 5.0),   # tilt in X (pitch-ish)
+            np.random.uniform(-5.0, 5.0),   # tilt in Y (yaw-ish)
+            np.random.uniform(-3.0, 3.0),   # small roll
+        ])
+        new_rotate = base_cam_rotate + rot_jitter
+        cam_prim.GetAttribute("xformOp:rotateXYZ").Set(tuple(new_rotate.tolist()))
+
+
+        if frame_idx % 10 == 0:
+            print(f"Frame {frame_idx}...")
 
         # Step sim+render
         world.step(render=True)
