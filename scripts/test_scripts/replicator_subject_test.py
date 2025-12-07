@@ -69,9 +69,9 @@ subject = rep.create.from_usd(
 # Optionally adjust its pose (e.g., center on origin, slightly above ground)
 with subject:
     rep.modify.pose(
-        position=(0.0, 0.0, 0.0),
+        position=(0.0, 0.0, 1.0),
         # You can tweak this if your asset is off-center or rotated oddly
-        rotation=(0.0, 0.0, 0.0),
+        rotation=(90.0, 0.0, 0.0),
     )
 
 print("Loaded subject from USD.")
