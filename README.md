@@ -67,6 +67,20 @@ C:\isaac-sim\python.bat src\convert_obj_to_usd.py `
   --usd  "C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\bottle02\bottle01.usd"
 ```
 
+### 5. Run Isaac Replicator script
+
+### 6. Run baseline YOLO test
+```
+# In Anaconda PowerShell
+conda activate yolo
+
+# Then cd into your repo
+cd C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline
+
+# Run the script with that env's python
+python .\scripts\baseline_yolo_control.py
+```
+
 
 
 
