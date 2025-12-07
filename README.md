@@ -68,8 +68,19 @@ C:\isaac-sim\python.bat src\convert_obj_to_usd.py `
 ```
 
 ### 5. Run Isaac Replicator script
+```
+# From Repo Root <path>\Real-to-Sim-Object-Scanning-Pipeline>
+C:\isaac-sim\python.bat `
+   .\scripts\test_scripts\replicator_subject_test.py `
+   --usd .\data\bottle01\bottle01.usd `
+   --frames 3000 `
+   --out "E:\synthetic_datasets\bottle01"
+```
 
 ### 6. Run baseline YOLO test
+- Label dataset, bottle01 is provided for reference. bottle01_real_only.yaml is also provided as an example. Use https://www.makesense.ai/ to easily label dataset.
+- Need conda
+- need python enviornment
 ```
 # In Anaconda PowerShell
 conda activate yolo
@@ -78,7 +89,7 @@ conda activate yolo
 cd C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline
 
 # Run the script with that env's python
-python .\scripts\baseline_yolo_control.py
+python .\src\baseline_yolo_control.py
 ```
 
 
