@@ -1,0 +1,4 @@
+{
+    "run_name": "baseline_real_only_20251207-125324",
+    "data_yaml": "C:\\Users\\samdd\\Documents\\school\\ML\\Real-to-Sim-Object-Scanning-Pipeline\\data\\bottle01\\bottle01_real_only.yaml",
+    "pretrained_weights": 
