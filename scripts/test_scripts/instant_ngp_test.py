@@ -26,7 +26,9 @@ INSTANT_NGP_ROOT = Path(r"C:\Apps\Instant-NGP-for-RTX-2000").resolve()
 ISAAC_PYTHON = Path(r"C:\isaac-sim\python.bat").resolve()
 
 # Where to store per-object workspaces
-DEFAULT_WORKSPACE_ROOT = (Path(__file__).resolve().parent.parent.parent / "data").resolve()
+DEFAULT_DATA_ROOT = (Path(__file__).resolve().parent.parent.parent / "data").resolve()
+# Path to your Real-to-Sim project repo
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent  # adjust if needed
 
 # NeRF training settings
 N_STEPS = 30000  # tune based on quality/time tradeoff
@@ -93,7 +95,7 @@ def run_colmap2nerf(scene_dir: Path):
 
     cmd = [
         sys.executable,
-        str(INSTANT_NGP_ROOT / "scripts" / "colmap2nerf.py"),
+        str(PROJECT_ROOT / "scripts" / "third_party" / "colmap2nerf_compat.py"),
         "--run_colmap",
         "--colmap_matcher", "exhaustive",
         "--aabb_scale", str(AABB_SCALE),
@@ -104,7 +106,7 @@ def run_colmap2nerf(scene_dir: Path):
     ]
 
     # colmap2nerf wants to be run from instant-ngp root usually
-    run_cmd(cmd, cwd=INSTANT_NGP_ROOT)
+    run_cmd(cmd, cwd=PROJECT_ROOT)
 
     if not transforms_path.exists():
         raise RuntimeError(f"colmap2nerf did not produce {transforms_path}")
@@ -193,8 +195,8 @@ def main():
     parser.add_argument(
         "--workspace_root",
         type=str,
-        default=str(DEFAULT_WORKSPACE_ROOT),
-        help=f"Root folder for per-object workspaces (default: {DEFAULT_WORKSPACE_ROOT})",
+        default=str(DEFAULT_DATA_ROOT),
+        help=f"Root folder for per-object workspaces (default: {DEFAULT_DATA_ROOT})",
     )
     parser.add_argument(
         "--skip_colmap",
