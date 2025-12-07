@@ -3,9 +3,13 @@ simulation_app = SimulationApp({"headless": True})
 
 import os
 import argparse
+import numpy as np
 
 from isaacsim.core.api import World
 import omni.replicator.core as rep
+import omni.usd
+from pxr import Gf, Sdf, UsdGeom
+
 
 # ---------------------------------------------------------------------
 # Argument parsing (for USD + basic config)
@@ -58,6 +62,34 @@ world.play()
 print("WORLD PLAYING?", world.is_playing())
 
 # ---------------------------------------------------------------------
+# Helper: create a SphereLight prim we can randomize
+# ---------------------------------------------------------------------
+def create_key_light(stage):
+    prim_type = "SphereLight"
+    light_path = omni.usd.get_stage_next_free_path(stage, "/World/KeyLight", False)
+    light_prim = stage.DefinePrim(light_path, prim_type)
+
+    xf = UsdGeom.Xformable(light_prim)
+    xf.AddTranslateOp().Set((0.0, 0.0, 2.0))
+    xf.AddScaleOp().Set((1.0, 1.0, 1.0))
+
+    # Set up light attributes with some defaults
+    light_prim.CreateAttribute("inputs:enableColorTemperature", Sdf.ValueTypeNames.Bool).Set(True)
+    light_prim.CreateAttribute("inputs:colorTemperature", Sdf.ValueTypeNames.Float).Set(6500.0)
+    light_prim.CreateAttribute("inputs:radius", Sdf.ValueTypeNames.Float).Set(0.5)
+    light_prim.CreateAttribute("inputs:intensity", Sdf.ValueTypeNames.Float).Set(30000.0)
+    light_prim.CreateAttribute("inputs:color", Sdf.ValueTypeNames.Color3f).Set((1.0, 1.0, 1.0))
+    light_prim.CreateAttribute("inputs:exposure", Sdf.ValueTypeNames.Float).Set(0.0)
+    light_prim.CreateAttribute("inputs:diffuse", Sdf.ValueTypeNames.Float).Set(1.0)
+    light_prim.CreateAttribute("inputs:specular", Sdf.ValueTypeNames.Float).Set(1.0)
+
+    return light_prim
+
+stage = omni.usd.get_context().get_stage()
+key_light_prim = create_key_light(stage)
+print("Created key light at:", key_light_prim.GetPath())
+
+# ---------------------------------------------------------------------
 # Load subject USD
 # ---------------------------------------------------------------------
 # We treat this as the main object of interest in the scene.
@@ -77,7 +109,7 @@ with subject:
 print("Loaded subject from USD.")
 
 # ---------------------------------------------------------------------
-# Camera + render product + PNG writer
+# Camera + render product
 # ---------------------------------------------------------------------
 # Simple camera looking at the subject
 camera = rep.create.camera(
@@ -89,6 +121,11 @@ rp = rep.create.render_product(
     camera,
     resolution=(640, 480),
 )
+
+
+# ---------------------------------------------------------------------
+# PNG writer
+# ---------------------------------------------------------------------
 
 writer_type = "BasicWriter"
 writer = rep.WriterRegistry.get(writer_type)
@@ -111,8 +148,44 @@ frame_idx = 0
 
 while simulation_app.is_running() and frame_idx < target_frames:
     if world.is_playing():
-        if frame_idx % 10 == 0:
-            print(f"Frame {frame_idx}...")
+
+        # --- Randomize light attributes each frame ---
+
+        # Position: jitter around the object
+        tx = np.random.uniform(-2.0, 2.0)
+        ty = np.random.uniform(-2.0, 2.0)
+        tz = np.random.uniform(1.0, 4.0)
+        key_light_prim.GetAttribute("xformOp:translate").Set((tx, ty, tz))
+
+        # Scale (optional)
+        scale_rand = np.random.uniform(0.5, 1.5)
+        key_light_prim.GetAttribute("xformOp:scale").Set((scale_rand, scale_rand, scale_rand))
+
+        # Color temperature (in Kelvin), with clamping
+        temp = np.random.normal(4500.0, 1500.0)
+        temp = float(np.clip(temp, 2000.0, 9000.0))
+        key_light_prim.GetAttribute("inputs:colorTemperature").Set(temp)
+
+        # Intensity, keep reasonably bright
+        intensity = np.random.normal(25000.0, 5000.0)
+        intensity = float(max(intensity, 1000.0))
+        key_light_prim.GetAttribute("inputs:intensity").Set(intensity)
+
+        # RGB color jitter
+        color = (
+            float(np.random.uniform(0.6, 1.0)),
+            float(np.random.uniform(0.6, 1.0)),
+            float(np.random.uniform(0.6, 1.0)),
+        )
+        key_light_prim.GetAttribute("inputs:color").Set(color)
+
+        # Let Replicator process its triggers (lighting randomization)
+        # rep.orchestrator.step()
+
+        # if frame_idx % 10 == 0:
+        print(f"Frame {frame_idx}...")
+
+        # Step sim+render
         world.step(render=True)
         frame_idx += 1
 
