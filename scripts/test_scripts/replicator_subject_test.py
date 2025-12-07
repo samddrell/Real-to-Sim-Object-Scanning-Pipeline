@@ -8,7 +8,7 @@ import numpy as np
 from isaacsim.core.api import World
 import omni.replicator.core as rep
 import omni.usd
-from pxr import Gf, Sdf, UsdGeom, UsdShade
+from pxr import Gf, Sdf, UsdGeom, UsdLux
 
 
 
@@ -91,6 +91,46 @@ stage = omni.usd.get_context().get_stage()
 key_light_prim = create_key_light(stage)
 print("Created key light at:", key_light_prim.GetPath())
 
+
+# ---------------------------------------------------------------
+# HDRI Dome Light + Randomizer
+# ---------------------------------------------------------------
+
+# Folder containing your HDRI files
+HDRI_FOLDER = r"C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline\data\HDRIs"
+
+# Scan folder for HDRI files
+hdri_files = [
+    os.path.join(HDRI_FOLDER, f)
+    for f in os.listdir(HDRI_FOLDER)
+    if f.lower().endswith((".hdr", ".exr"))
+]
+
+if not hdri_files:
+    raise RuntimeError("No HDRI files found in HDRI folder: " + HDRI_FOLDER)
+
+print("Found HDRIs:", hdri_files)
+
+# Create dome light
+dome_path = "/World/HDRI_Dome"
+dome = UsdLux.DomeLight.Define(stage, dome_path)
+
+# Basic dome settings
+dome.CreateIntensityAttr(100)         # brightness
+dome.CreateTextureFormatAttr("latlong") # required to interpret HDRIs correctly
+
+
+# Function to change the dome light HDRI
+def set_hdri_random():
+    chosen = np.random.choice(hdri_files)
+    dome.CreateTextureFileAttr().Set(chosen)
+    print("HDRI set to:", chosen)
+
+
+# Set initial HDRI
+set_hdri_random()
+
+
 # ---------------------------------------------------------------------
 # Load subject USD
 # ---------------------------------------------------------------------
@@ -151,7 +191,12 @@ base_cam_rotate = np.array(list(base_cam_rotate), dtype=float)
 writer_type = "BasicWriter"
 writer = rep.WriterRegistry.get(writer_type)
 
-output_dir = os.path.join(os.getcwd(), output_subdir)
+# If --out is absolute (like E:\...), use it directly.
+# Otherwise, treat it as relative to the current working directory.
+if os.path.isabs(output_subdir):
+    output_dir = output_subdir
+else:
+    output_dir = os.path.join(os.getcwd(), output_subdir)
 os.makedirs(output_dir, exist_ok=True)
 
 writer.initialize(
@@ -257,6 +302,8 @@ while simulation_app.is_running() and frame_idx < target_frames:
             np.random.uniform(-3.0, 3.0),   # small roll
         ])
 
+        if frame_idx % 20 == 0:
+            set_hdri_random()
 
         if frame_idx % 10 == 0:
             print(f"Frame {frame_idx}...")
