@@ -8,7 +8,8 @@ import numpy as np
 from isaacsim.core.api import World
 import omni.replicator.core as rep
 import omni.usd
-from pxr import Gf, Sdf, UsdGeom
+from pxr import Gf, Sdf, UsdGeom, UsdShade
+
 
 
 # ---------------------------------------------------------------------
@@ -49,17 +50,18 @@ if not os.path.exists(usd_path):
     raise FileNotFoundError(f"Subject USD not found: {usd_path}")
 
 # ---------------------------------------------------------------------
-# World + ground
+# World + default ground plane
 # ---------------------------------------------------------------------
 world = World(
     stage_units_in_meters=1.0,
     physics_prim_path="/physicsScene",
     backend="numpy",
 )
-world.scene.add_default_ground_plane()
+world.scene.add_default_ground_plane()   # ✅ back to the regular ground
 world.reset()
 world.play()
 print("WORLD PLAYING?", world.is_playing())
+
 
 # ---------------------------------------------------------------------
 # Helper: create a SphereLight prim we can randomize
@@ -101,7 +103,7 @@ subject = rep.create.from_usd(
 # Optionally adjust its pose (e.g., center on origin, slightly above ground)
 with subject:
     rep.modify.pose(
-        position=(0.0, 0.0, 1.0),
+        position=(0.0, 0.0, 2),
         # You can tweak this if your asset is off-center or rotated oddly
         rotation=(90.0, 0.0, 0.0),
     )
@@ -123,7 +125,7 @@ rp = rep.create.render_product(
 )
 
 # ---------------------------------------------------------------------
-# 🔹 NEW: grab the underlying camera prim & base transform
+# Grab the underlying camera prim & base transform
 # ---------------------------------------------------------------------
 cam_prims_info = camera.get_output_prims()
 cam_prim = cam_prims_info["prims"][0]
@@ -198,27 +200,52 @@ while simulation_app.is_running() and frame_idx < target_frames:
         )
         key_light_prim.GetAttribute("inputs:color").Set(color)
 
-        # --- 🔹 NEW: randomize CAMERA pose each frame ---
+        # --- Randomize OBJECT pose each frame (position + rotation) ---
 
-        xy_jitter = np.random.uniform(-12, 12)
-        # Position jitter around base (controls distance & XY orbit)
-        pos_jitter = np.array([
-            xy_jitter,   # X jitter
-            # np.random.uniform(-5, 5),   # Y jitter
-            xy_jitter,
-            np.random.uniform(-0.3, 0.3),   # Z jitter
+        # Small translation jitter around base (0, 0, 1)
+        pos_jitter_obj = np.array([
+            np.random.uniform(-0.05, 0.05),   # X jitter
+            np.random.uniform(-0.05, 0.05),   # Y jitter
+            np.random.uniform(-0.02, 0.02),   # Z jitter
         ])
-        # new_translate = base_cam_translate + pos_jitter
-        # cam_prim.GetAttribute("xformOp:translate").Set(tuple(new_translate.tolist()))
+        base_obj_pos = np.array([0.0, 0.0, 0.3], dtype=float)
+        new_obj_pos = base_obj_pos + pos_jitter_obj
 
-        # base_cam_translate can just be your original (2,2,2) if you like
-        base_cam_translate = np.array([2.0, 2.0, 2.0], dtype=float)
-        new_translate = base_cam_translate + pos_jitter
+        # Full 360° random rotation on each axis
+        new_obj_rot = (
+            float(np.random.uniform(0.0, 360.0)),  # X
+            float(np.random.uniform(0.0, 360.0)),  # Y
+            float(np.random.uniform(0.0, 360.0)),  # Z
+        )
+
+        with subject:
+            rep.modify.pose(
+                position=tuple(new_obj_pos.tolist()),
+                rotation=new_obj_rot,
+            )
+
+
+        # --- randomize CAMERA pose each frame ---
+
+        # Desired distance band from the object (in XY plane)
+        r_min, r_max = 2.5, 4.5
+
+        # Bias towards larger radii using sqrt-trick
+        if frame_idx % 3 == 0:      # Reduce frequency of camera moves to increase speed
+            # randomize object + camera
+            u = np.random.uniform(0.0, 1.0)
+            r = r_min + (r_max - r_min) * np.sqrt(u)
+
+        theta = np.random.uniform(0.0, 2.0 * np.pi)
+
+        cam_x = r * np.cos(theta)
+        cam_y = r * np.sin(theta)
+        cam_z = np.random.uniform(1.5, 3.0)  # height band
 
         # Re-apply look_at each frame so we never lose the subject
         with camera:
             rep.modify.pose(
-                position=tuple(new_translate.tolist()),
+                position=(float(cam_x), float(cam_y), float(cam_z)),
                 look_at=subject,
             )
 
@@ -229,8 +256,6 @@ while simulation_app.is_running() and frame_idx < target_frames:
             np.random.uniform(-5.0, 5.0),   # tilt in Y (yaw-ish)
             np.random.uniform(-3.0, 3.0),   # small roll
         ])
-        new_rotate = base_cam_rotate + rot_jitter
-        cam_prim.GetAttribute("xformOp:rotateXYZ").Set(tuple(new_rotate.tolist()))
 
 
         if frame_idx % 10 == 0:
