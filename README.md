@@ -16,7 +16,7 @@ bottle02 is provided as an opportunity to replicate the example.
     - This step extracts camera data that is crucial to nerf training
     - Produces a "transform.json" file that contains camera information for each image.
     - Will leave out photos it deems bad. A Good original photo sample set is crucial to ensure that each image is included.
-    - To run COLMAP, run the following commands:
+    - To run COLMAP, run the following commands. Of course, customize file paths.
 
 ```
 C:\isaac-sim\python.bat src\prepare_colmap_scene.py `
@@ -24,7 +24,7 @@ C:\isaac-sim\python.bat src\prepare_colmap_scene.py `
     --scene_name bottle02
 ```
 
-For your convenience, the code to run COLMAP directly from the commandline is provided below:
+For your convenience, the code to run COLMAP directly from the commandline is provided below. Of course, customize file paths.
 
 ```
 cd C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Scanning-Pipeline
