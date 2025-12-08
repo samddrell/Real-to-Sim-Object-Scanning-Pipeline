@@ -1,0 +1,14 @@
+# Real-only dataset for the bottle01 object
+
+# Root for this dataset
+path: E:/datasets/bottle01
+
+# Image subfolders (relative to "path")
+train: hybrid_datasets/images/train
+val:   hybrid_datasets/images/val
+
+test:  Real Datasets/test_set/images
+
+# Class names
+names:
+  0: bottle
