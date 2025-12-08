@@ -11,6 +11,10 @@ What it does:
 
 Edit ONLY the "==== USER CONFIG ====" section below as you
 create new datasets (real-only, real+synthetic, new test set, etc.).
+
+RUN:
+python C:/Users/samdd/Documents/school/ML/Real-to-Sim-Object-Scanning-Pipeline/src/baseline_yolo_control.py
+
 """
 
 from pathlib import Path
@@ -28,7 +32,7 @@ WORKSPACE_ROOT = Path(r"C:\Users\samdd\Documents\school\ML\Real-to-Sim-Object-Sc
 
 # Which dataset to use for THIS experiment:
 #   e.g. real_only.yaml, real_plus_synth.yaml, synth_only.yaml, etc.
-DATA_YAML = WORKSPACE_ROOT / "data" / "bottle01" / "bottle01_real_only.yaml"
+DATA_YAML = WORKSPACE_ROOT / "data" / "bottle01" / "bottle01_hybrid.yaml"
 # Later you can point this to:
 # DATA_YAML = WORKSPACE_ROOT / "data" / "my_bottle_real_plus_synth.yaml"
 
@@ -37,7 +41,7 @@ PRETRAINED_WEIGHTS = Path(r"C:\yolo_play\yolo11n.pt")   # or yolov8n.pt
 
 # Where to put results for this run
 RUNS_PARENT = WORKSPACE_ROOT / "runs"
-RUN_NAME = f"baseline_real_only_{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+RUN_NAME = f"baseline_hybrid_{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 # Basic training / eval settings
 IMG_SIZE = 640        # image size
