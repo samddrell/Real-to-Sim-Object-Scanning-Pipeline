@@ -16,6 +16,8 @@ data/bottle02/colmap/
 # If you want photos to stay local/private:
 # data/photos_raw/
 
+/runs/
+
 *.log
 *.db
 

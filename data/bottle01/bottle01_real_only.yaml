@@ -1,0 +1,12 @@
+# Real-only dataset for the bottle01 object
+
+# Root for this dataset
+path: C:/Users/samdd/Documents/school/ML/Real-to-Sim-Object-Scanning-Pipeline/data/bottle01
+
+# Image subfolders (relative to "path")
+train: images/train
+val: images/val
+test: "E:/datasets/bottle01/Real Datasets/test_set/images"
+# Class names
+names:
+  0: bottle
